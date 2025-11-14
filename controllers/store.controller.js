@@ -222,6 +222,49 @@ module.exports.updateStoreInfo = async (req, res, next) => {
 
 
 
+module.exports.addFcmToken = async (req, res) => {
+  try {
+    const store = await storeModel.findById(req.store._id);
+    const token = req.body.fcmToken;
+
+    if (!token) return res.status(400).json({ success: false });
+
+    // Duplicate token add mat kar
+    if (!store.fcmTokens.includes(token)) {
+      store.fcmTokens.push(token);
+      await store.save();
+    }
+
+    return res.status(200).json({ success: true , store });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ success: false });
+  }
+};
+
+
+exports.removeFcmToken = async (req, res) => {
+  try {
+    const storeId = req.store._id;
+    const { fcmToken } = req.body;
+
+    if (!fcmToken)
+      return res.status(400).json({ message: "FCM token is required" });
+
+    await storeModel.findByIdAndUpdate(storeId, {
+      $pull: { fcmTokens: fcmToken },
+    });
+
+    return res.status(200).json({
+      message: "FCM token removed successfully",
+    });
+  } catch (error) {
+    console.error("Remove FCM Error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+
 
 
 

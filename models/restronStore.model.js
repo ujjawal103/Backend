@@ -60,6 +60,10 @@ const storeOwnerSchema = new schema({
         default: null
     },
 
+    fcmTokens: {
+    type: [String],
+    default: []
+    },
 
     items: [
         {

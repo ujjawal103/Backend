@@ -120,6 +120,23 @@ router.put(
 );
 
 
+router.post(
+  "/add-fcm",
+  authMiddleware.authStore,
+  [
+    body('fcmToken').notEmpty().withMessage('FCM Token is required'),
+  ],
+  storeController.addFcmToken
+);
 
+
+router.delete(
+  "/remove-fcm",
+  authMiddleware.authStore,
+  [
+    body('fcmToken').notEmpty().withMessage('FCM Token is required'),
+  ],
+  storeController.removeFcmToken
+);
 
 module.exports = router;
