@@ -1,21 +1,21 @@
-const { google } = require("google-auth-library");
+const { GoogleAuth } = require("google-auth-library");
 const axios = require("axios");
 const loadServiceAccount = require("./firebaseService");
 const serviceAccount = loadServiceAccount();
 
-
+// Scopes for FCM HTTP v1
 const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
 
+// Get access token using GoogleAuth (correct way)
 async function getAccessToken() {
-  const client = new google.auth.JWT(
-    serviceAccount.client_email,
-    null,
-    serviceAccount.private_key,
-    SCOPES
-  );
+  const auth = new GoogleAuth({
+    credentials: serviceAccount,
+    scopes: SCOPES,
+  });
 
-  const tokens = await client.authorize();
-  return tokens.access_token;
+  const client = await auth.getClient();
+  const accessToken = await client.getAccessToken();
+  return accessToken;
 }
 
 async function sendPushNotification(tokens, title, body) {
@@ -30,24 +30,21 @@ async function sendPushNotification(tokens, title, body) {
       const payload = {
         message: {
           token,
-          notification: {
-            title,
-            body,
-          }
-        }
+          notification: { title, body },
+        },
       };
 
       await axios.post(url, payload, {
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`
-        }
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
     }
 
-    console.log("Push sent (HTTP v1)");
+    console.log("🔥 Push sent (HTTP v1)");
   } catch (error) {
-    console.error("Push failed:", error.response?.data || error.message);
+    console.error("❌ Push failed:", error.response?.data || error.message);
   }
 }
 
