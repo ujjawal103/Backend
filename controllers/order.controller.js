@@ -101,6 +101,7 @@ exports.createOrder = async (req, res) => {
     console.log("✅ Order created:", order._id);
 
     if (store.fcmTokens && store.fcmTokens.length > 0) {
+      console.log("🚀 Sending push notification to store for new order...");
       await sendPushNotification(
         store.fcmTokens,
         "New Order Received!",
