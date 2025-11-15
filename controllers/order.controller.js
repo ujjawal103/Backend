@@ -98,6 +98,8 @@ exports.createOrder = async (req, res) => {
 
     await order.save();
 
+    console.log("✅ Order created:", order._id);
+
     if (store.fcmTokens && store.fcmTokens.length > 0) {
       await sendPushNotification(
         store.fcmTokens,
