@@ -13,14 +13,14 @@ async function getAccessToken() {
     scopes: SCOPES,
   });
 
-  
-
   const client = await auth.getClient();
-  const accessToken = await client.getAccessToken();
-  console.log("🔥 Access token:", accessToken);
-  
-  return accessToken;
+  const { token } = await client.getAccessToken();
+
+  console.log("🔥 REAL Access token:", token);
+
+  return token; // <-- return raw token only
 }
+
 
 async function sendPushNotification(tokens, title, body) {
   try {
