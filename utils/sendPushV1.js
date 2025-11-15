@@ -13,8 +13,12 @@ async function getAccessToken() {
     scopes: SCOPES,
   });
 
+  
+
   const client = await auth.getClient();
   const accessToken = await client.getAccessToken();
+  console.log("🔥 Access token:", accessToken);
+  
   return accessToken;
 }
 
