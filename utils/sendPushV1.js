@@ -1,6 +1,8 @@
 const { google } = require("google-auth-library");
 const axios = require("axios");
-const serviceAccount = require("../service-account.json");
+const loadServiceAccount = require("./firebaseService");
+const serviceAccount = loadServiceAccount();
+
 
 const SCOPES = ["https://www.googleapis.com/auth/firebase.messaging"];
 
