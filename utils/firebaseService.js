@@ -4,6 +4,9 @@ function loadServiceAccount() {
   console.log("🔥 RAW ENV EXISTS:", !!raw);
   console.log("🔥 RAW LENGTH:", raw ? raw.length : 0);
 
+  console.log("🔥 ENV LINE COUNT:", process.env.FIREBASE_SERVICE_ACCOUNT_BASE64.split("\n").length);
+
+
   let jsonString = Buffer.from(raw, "base64").toString("utf8");
 
   console.log("🔥 DECODED FIRST 200 CHARS:");
