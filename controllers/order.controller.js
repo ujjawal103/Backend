@@ -4,7 +4,7 @@ const Order = require("../models/orders.model");
 const Store = require("../models/restronStore.model");
 const Table = require("../models/tables.model");
 const { sendMessageToSocket } = require("../socket");
-const sendPushNotification = require("../utils/sendPushNotification");
+const sendPushNotification = require("../utils/sendPushV1");
 
 exports.createOrder = async (req, res) => {
   try {
