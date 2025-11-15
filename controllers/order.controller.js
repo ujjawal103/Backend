@@ -4,6 +4,7 @@ const Order = require("../models/orders.model");
 const Store = require("../models/restronStore.model");
 const Table = require("../models/tables.model");
 const { sendMessageToSocket } = require("../socket");
+const sendPushNotification = require("../utils/sendPushNotification");
 
 exports.createOrder = async (req, res) => {
   try {
@@ -96,6 +97,14 @@ exports.createOrder = async (req, res) => {
     });
 
     await order.save();
+
+    if (store.fcmTokens && store.fcmTokens.length > 0) {
+      await sendPushNotification(
+        store.fcmTokens,
+        "New Order Received!",
+        `New order from Table ${table.tableNumber} totaling ₹${finalTotal.toFixed(2)}`
+      );
+    }
 
     
     const storeSocketId = store.socketId;
