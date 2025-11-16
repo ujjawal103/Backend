@@ -100,14 +100,15 @@ exports.createOrder = async (req, res) => {
 
     console.log("✅ Order created:", order._id);
 
-    if (store.fcmTokens && store.fcmTokens.length > 0) {
-      console.log("🚀 Sending push notification to store for new order...");
-      await sendPushNotification(
-        store.fcmTokens,
-        "New Order Received!",
-        `New order from Table ${table.tableNumber} totaling ₹${finalTotal.toFixed(2)}`
-      );
-    }
+      if (store.fcmTokens && store.fcmTokens.length > 0) {
+        console.log("🚀 Sending push notification to store for new order...");
+        await sendPushNotification(
+          store.fcmTokens,
+          "New Order Received!",
+          `New order from Table ${table.tableNumber} totaling ₹${finalTotal.toFixed(2)}`,
+          storeId
+        );
+      }
 
     
     const storeSocketId = store.socketId;
