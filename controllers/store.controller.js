@@ -224,25 +224,27 @@ module.exports.updateStoreInfo = async (req, res, next) => {
 
 module.exports.addFcmToken = async (req, res) => {
   try {
-    const store = await storeModel.findById(req.store._id);
+    const storeId = req.store._id;
     const token = req.body.fcmToken;
 
-    if (!token) return res.status(400).json({ success: false });
-
-    // Duplicate token add mat kar
-    const cleanToken = (token || "").trim();
-    if (!store.fcmTokens.includes(cleanToken)) {
-      store.fcmTokens.push(cleanToken);
-      await store.save();
+    if (!token) {
+      return res.status(400).json({ success: false, message: "Token required" });
     }
 
+    const cleanToken = token.trim();
 
-    return res.status(200).json({ success: true , store });
+    // ⭐ Atomic operation – No duplicates, no race condition
+    await storeModel.findByIdAndUpdate(storeId, {
+      $addToSet: { fcmTokens: cleanToken }
+    });
+
+    return res.status(200).json({ success: true });
   } catch (error) {
-    console.log(error);
+    console.log("Add FCM Error:", error);
     return res.status(500).json({ success: false });
   }
 };
+
 
 
 exports.removeFcmToken = async (req, res) => {
