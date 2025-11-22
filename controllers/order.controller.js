@@ -131,6 +131,87 @@ exports.createOrder = async (req, res) => {
 };
 
 
+exports.syncAllOrders = async (req, res) => {
+  try {
+    const { storeId, orders } = req.body;
+
+    if (!storeId || !Array.isArray(orders)) {
+      return res.status(400).json({ message: "Missing storeId or orders array" });
+    }
+
+    const store = await Store.findById(storeId);
+    if (!store) return res.status(404).json({ message: "Store not found" });
+
+    let successCount = 0;
+    let failedCount = 0;
+    const results = [];
+
+    for (const o of orders) {
+      try {
+        const { tableId, username, items, billingSummary, createdAt, updatedAt } = o;
+
+        if (!tableId || !items || items.length === 0 || !billingSummary) {
+          results.push({ ok: false, orderRef: o._localId });
+          failedCount++;
+          continue;
+        }
+
+        const table = await Table.findOne({ _id: tableId, store: storeId });
+        if (!table) {
+          results.push({ ok: false, orderRef: o._localId });
+          failedCount++;
+          continue;
+        }
+
+        // 🟢 Save EXACTLY as frontend created
+        const orderDoc = new Order({
+          storeId,
+          tableId,
+          username: username || "Guest",
+          items,
+          ...billingSummary,
+          source: "offline-sync",
+          isSynced: true,
+          createdAt: createdAt ? new Date(createdAt) : new Date(),
+          updatedAt: updatedAt ? new Date(updatedAt) : new Date(),
+        });
+
+        await orderDoc.save();
+
+        results.push({ ok: true, orderId: orderDoc._id, orderRef: o._localId });
+        successCount++;
+
+      } catch (e) {
+        console.log("Sync error for one order:", e);
+        results.push({ ok: false, orderRef: o._localId });
+        failedCount++;
+      }
+    }
+
+    const total = successCount + failedCount;
+
+    if (total > 1 && store.fcmTokens.length > 0) {
+      await sendPushNotification(
+        store.fcmTokens,
+        "Offline Sync Report",
+        `${successCount} orders synced, ${failedCount} failed.`,
+        storeId
+      );
+    }
+
+    return res.json({
+      success: true,
+      summary: { successCount, failedCount, total },
+      results,
+    });
+
+  } catch (err) {
+    console.log(err);
+    return res.status(500).json({ message: "Server error during sync" });
+  }
+};
+
+
 
 
 // ✅ Get all orders for a store (Store Dashboard)

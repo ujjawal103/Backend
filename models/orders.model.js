@@ -44,42 +44,45 @@ const orderSchema = new mongoose.Schema(
         "cancelled"
       ],
       default: "pending"
-    }
+    },
+   
+    isSynced: { type: Boolean, default: false },
+    source: { type: String, enum: ["online", "offline-sync"], default: "online" }
   },
   { timestamps: true }
 );
 
 // 🧮 Auto-calculate totals before save
-orderSchema.pre("save", function (next) {
-  const order = this;
+// orderSchema.pre("save", function (next) {
+//   const order = this;
 
-  // Step 1: Calculate totals for variants and items
-  order.items.forEach(item => {
-    item.variants.forEach(variant => {
-      variant.total = variant.quantity * variant.price;
-    });
-    item.totalItemPrice = item.variants.reduce((sum, v) => sum + v.total, 0);
-  });
+//   // Step 1: Calculate totals for variants and items
+//   order.items.forEach(item => {
+//     item.variants.forEach(variant => {
+//       variant.total = variant.quantity * variant.price;
+//     });
+//     item.totalItemPrice = item.variants.reduce((sum, v) => sum + v.total, 0);
+//   });
 
-  // Step 2: Calculate subtotal
-  const subtotal = order.items.reduce((sum, i) => sum + i.totalItemPrice, 0);
-  order.subTotal = subtotal;
+//   // Step 2: Calculate subtotal
+//   const subtotal = order.items.reduce((sum, i) => sum + i.totalItemPrice, 0);
+//   order.subTotal = subtotal;
 
-  // Step 3: Calculate GST and restaurant charge
-  order.gstAmount = order.gstApplicable ? subtotal * order.gstRate : 0;
-  order.restaurantChargeAmount = 0;
+//   // Step 3: Calculate GST and restaurant charge
+//   order.gstAmount = order.gstApplicable ? subtotal * order.gstRate : 0;
+//   order.restaurantChargeAmount = 0;
 
-  if (order.restaurantChargeApplicable) {
-    order.restaurantChargeAmount =
-      order.restaurantCharge > 1
-        ? order.restaurantCharge
-        : subtotal * order.restaurantCharge;
-  }
+//   if (order.restaurantChargeApplicable) {
+//     order.restaurantChargeAmount =
+//       order.restaurantCharge > 1
+//         ? order.restaurantCharge
+//         : subtotal * order.restaurantCharge;
+//   }
 
-  // Step 4: Final total
-  order.totalAmount = subtotal + order.gstAmount + order.restaurantChargeAmount;
+//   // Step 4: Final total
+//   order.totalAmount = subtotal + order.gstAmount + order.restaurantChargeAmount;
 
-  next();
-});
+//   next();
+// });
 
 module.exports = mongoose.model("Order", orderSchema);

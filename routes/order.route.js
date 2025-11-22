@@ -16,6 +16,15 @@ router.post(
   orderController.createOrder
 );
 
+router.post(
+  "/sync-orders",
+  [
+    body("storeId").isMongoId().withMessage("Invalid Store ID"),
+    body("orders").isArray().withMessage("Orders array is required"),
+  ],
+  orderController.syncAllOrders
+);
+
 // ✅ Get all orders for a store (Store Dashboard)
 router.get(
   "/store-orders",
