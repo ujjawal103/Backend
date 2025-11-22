@@ -15,6 +15,13 @@ exports.createOrder = async (req, res) => {
     }
 
     const { storeId, tableId, username, items, billingSummary } = req.body;
+    console.log("💥 Received order create request:", {
+      storeId,
+      tableId,
+      username,
+      items,
+      billingSummary
+    });
 
     const store = await Store.findById(storeId);
     const table = await Table.findOne({ _id: tableId, store });
