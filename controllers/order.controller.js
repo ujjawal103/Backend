@@ -7,24 +7,14 @@ const { sendMessageToSocket } = require("../socket");
 const sendPushNotification = require("../utils/sendPushV1");
 
 exports.createOrder = async (req, res) => {
-  console.log("💥 createOrder called");
 
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      console.log("❌ VALIDATION ERRORS:", errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { storeId, tableId, username, items, billingSummary } = req.body;
-
-    console.log("💥 Received order create request:", {
-      storeId,
-      tableId,
-      username,
-      items,
-      billingSummary
-    });
 
     const store = await Store.findById(storeId);
     const table = await Table.findOne({ _id: tableId, store });
@@ -44,7 +34,6 @@ exports.createOrder = async (req, res) => {
 
     await order.save();
 
-    console.log("✅ Order created:", order._id);
 
     // 🔔 Send push notification
     if (store.fcmTokens?.length > 0) {
