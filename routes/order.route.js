@@ -12,7 +12,7 @@ router.post(
     body("tableId").isMongoId().withMessage("Invalid Table ID"),
     body("username").optional().isString(),
     body("items").isArray({ min: 1 }).withMessage("Items are required"),
-    body("billingSummary").isObject().withMessage("Billing summary is required"),
+    body("billingSummary").notEmpty().withMessage("Billing summary is required"),
   ],
   orderController.createOrder
 );

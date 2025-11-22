@@ -12,6 +12,7 @@ exports.createOrder = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log("❌ VALIDATION ERRORS:", errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
