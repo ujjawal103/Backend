@@ -7,6 +7,7 @@ const { sendMessageToSocket } = require("../socket");
 const sendPushNotification = require("../utils/sendPushV1");
 
 exports.createOrder = async (req, res) => {
+  console.log("💥 createOrder called");
   try {
     // 🧩 Step 1: Validate request input
     const errors = validationResult(req);
