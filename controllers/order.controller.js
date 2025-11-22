@@ -14,7 +14,7 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { storeId, tableId,username, items } = req.body;
+    const { storeId, tableId,username, items , billingSummary } = req.body;
 
     // 🏪 Step 2: Fetch store settings (GST & restaurant charge)
     const store = await Store.findById(storeId);
@@ -89,11 +89,7 @@ exports.createOrder = async (req, res) => {
       tableId,
       username,
       items,
-      gstApplicable,
-      restaurantChargeApplicable,
-      gstRate,
-      restaurantCharge,
-      totalAmount: finalTotal, // will also be recalculated in pre-save
+      ...billingSummary,
     });
 
     await order.save();
