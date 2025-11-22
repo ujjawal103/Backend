@@ -8,14 +8,15 @@ const sendPushNotification = require("../utils/sendPushV1");
 
 exports.createOrder = async (req, res) => {
   console.log("💥 createOrder called");
+
   try {
-    // 🧩 Step 1: Validate request input
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { storeId, tableId, username, items, billingSummary } = req.body;
+
     console.log("💥 Received order create request:", {
       storeId,
       tableId,
@@ -37,42 +38,43 @@ exports.createOrder = async (req, res) => {
       tableId,
       username,
       items,
-      ...billingSummary,  // 💥 Full billing calculated by frontend
+      ...billingSummary,
     });
 
     await order.save();
 
     console.log("✅ Order created:", order._id);
 
-      if (store.fcmTokens && store.fcmTokens.length > 0) {
-        console.log("🚀 Sending push notification to store for new order...");
-        await sendPushNotification(
-          store.fcmTokens,
-          "New Order Received!",
-          `New order from Table ${table.tableNumber} totaling ₹${finalTotal.toFixed(2)}`,
-          storeId
-        );
-      }
+    // 🔔 Send push notification
+    if (store.fcmTokens?.length > 0) {
+      await sendPushNotification(
+        store.fcmTokens,
+        "New Order Received!",
+        `New order from Table ${table.tableNumber} totaling ₹${billingSummary?.totalAmount || 0}`,
+        storeId
+      );
+    }
 
-    
+    // 🔔 Emit socket event
     const storeSocketId = store.socketId;
     if (storeSocketId) {
       sendMessageToSocket(storeSocketId, {
         event: "new-order",
         data: order
       });
-      
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Order placed successfully",
       order,
     });
+
   } catch (error) {
     console.error("❌ Error in createOrder:", error);
-    res.status(500).json({ message: "Server error", error: error.message });
+    return res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
 
 
 exports.syncAllOrders = async (req, res) => {
