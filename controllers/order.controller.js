@@ -14,82 +14,22 @@ exports.createOrder = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { storeId, tableId,username, items , billingSummary } = req.body;
+    const { storeId, tableId, username, items, billingSummary } = req.body;
 
-    // 🏪 Step 2: Fetch store settings (GST & restaurant charge)
     const store = await Store.findById(storeId);
-    if (!store) {
-      return res.status(404).json({ message: "Store not found" });
+    const table = await Table.findOne({ _id: tableId, store });
+
+    if (!store || !table) {
+      return res.status(404).json({ message: "Store / Table not found" });
     }
 
-    const table = await Table.findOne({ _id: tableId, store});
-    if (!table) {
-      return res.status(404).json({ message: "Table not for booking" });
-    }
-
-    const gstApplicable = store.gstSettings?.gstApplicable || false;
-    const restaurantChargeApplicable = store.gstSettings?.restaurantChargeApplicable || false;
-    const gstRate = store.gstSettings?.gstRate || 0;
-    const restaurantCharge = store.gstSettings?.restaurantCharge || 0;
-
-    // 🧠 Step 3: Validate all items and variants
-    let totalServerPrice = 0;
-
-    for (const orderItem of items) {
-    const item = await Item.findOne({
-      _id: orderItem.itemId,
-      storeId,
-      itemName: { $regex: new RegExp(`^${orderItem.itemName}$`, "i") }
-    });
-
-      if (!item || !item.available) {
-        return res.status(400).json({
-          message: `Item '${orderItem.itemName || orderItem.itemId}' is not available or doesn't exist.`,
-        });
-      }
-
-      // 🔍 Validate variants
-      for (const variant of orderItem.variants) {
-        const existingVariant = item.variants.find(
-          (v) => v.name.toLowerCase() === variant.type.toLowerCase()
-        );
-
-        if (!existingVariant) {
-          return res.status(400).json({
-            message: `Variant '${variant.type}' is not available for '${item.itemName}'.`,
-          });
-        }
-
-        // ⚔️ Price verification (anti-tampering)
-        if (variant.price !== existingVariant.price) {
-          return res.status(403).json({
-            message: "Autonomous behavior detected: Price mismatch detected.",
-          });
-        }
-
-        // 💰 Add total variant price (for server validation)
-        totalServerPrice += existingVariant.price * variant.quantity;
-      }
-    }
-
-    // 🧮 Step 4: Apply GST & restaurant charge (based on store settings)
-    let gstAmount = gstApplicable ? totalServerPrice * gstRate : 0;
-    let restaurantChargeAmount = 0;
-
-    if (restaurantChargeApplicable) {
-      restaurantChargeAmount =
-        restaurantCharge > 1 ? restaurantCharge : totalServerPrice * restaurantCharge;
-    }
-
-    const finalTotal = totalServerPrice + gstAmount + restaurantChargeAmount;
-
-    // ✅ Step 5: Create and save the order
+    // Save EXACT values from frontend
     const order = new Order({
       storeId,
       tableId,
       username,
       items,
-      ...billingSummary,
+      ...billingSummary,  // 💥 Full billing calculated by frontend
     });
 
     await order.save();
