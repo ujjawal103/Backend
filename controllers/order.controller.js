@@ -126,7 +126,7 @@ exports.syncAllOrders = async (req, res) => {
 
     const total = successCount + failedCount;
 
-    if (total > 1 && store.fcmTokens.length > 0) {
+    if (total > 0 && store.fcmTokens.length > 0) {
       await sendPushNotification(
         store.fcmTokens,
         "Offline Sync Report",
